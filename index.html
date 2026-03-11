@@ -1,0 +1,1199 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HOMEPEDIA — Exploring Housing Insights</title>
+    <style>
+        /* =========================================
+           STYLES.CSS (Consolidated)
+           ========================================= */
+        :root {
+            /* Dark Theme (Default) */
+            --bg: #0f172a;
+            --surface: #1e293b;
+            --text: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent: #38bdf8;
+            --accent-secondary: #818cf8;
+            --accent-glow: rgba(56, 189, 248, 0.15);
+            --gradient: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+            --grid-lines: rgba(255, 255, 255, 0.05);
+            --nav-bg: rgba(15, 23, 42, 0.85);
+            --shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        [data-theme="light"] {
+            /* Light Theme */
+            --bg: #f8fafc;
+            --surface: #ffffff;
+            --text: #0f172a;
+            --text-muted: #64748b;
+            --accent: #0284c7;
+            --accent-secondary: #4f46e5;
+            --accent-glow: rgba(2, 132, 199, 0.1);
+            --gradient: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+            --grid-lines: rgba(0, 0, 0, 0.05);
+            --nav-bg: rgba(248, 250, 252, 0.85);
+            --shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            overflow: hidden;
+            transition: background-color 0.3s, color 0.3s;
+            /* Base font size for scalable em layout */
+            font-size: 20px;
+            /* Subtle dot grid background */
+            background-image: radial-gradient(var(--grid-lines) 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+
+        /* --- DECK CONTAINER (16:9 Aspect Ratio) --- */
+        #deck-container {
+            width: 1600px;
+            height: 900px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            margin-top: -450px;
+            margin-left: -800px;
+            transform-origin: center center;
+            perspective: 1200px;
+        }
+
+        .slide {
+            position: absolute;
+            inset: 0;
+            background: var(--surface);
+            border-radius: 24px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--grid-lines);
+            padding: 4em 6em;
+            display: flex;
+            flex-direction: column;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+            /* Initial state (coming from next) */
+            transform: translateX(10%) scale(0.95);
+            z-index: 1;
+        }
+
+        .slide.active {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(0) scale(1);
+            z-index: 2;
+        }
+
+        .slide.prev {
+            transform: translateX(-10%) scale(0.95);
+            z-index: 1;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .slide {
+                transition: opacity 0.3s ease;
+                transform: none !important;
+            }
+        }
+
+        /* --- TYPOGRAPHY & COMMON ELEMENTS --- */
+        .gradient-text {
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: inline-block;
+        }
+
+        h1,
+        h2,
+        h3 {
+            font-weight: 800;
+            line-height: 1.2;
+            margin-bottom: 0.5em;
+            letter-spacing: -0.02em;
+        }
+
+        p,
+        li {
+            font-size: 1.4em;
+            line-height: 1.6;
+            color: var(--text-muted);
+            margin-bottom: 0.8em;
+        }
+
+        ul {
+            padding-left: 1.5em;
+        }
+
+        li::marker {
+            color: var(--accent);
+        }
+
+        .slide-header {
+            font-size: 3.5em;
+            margin-bottom: 1em;
+            border-bottom: 2px solid var(--grid-lines);
+            padding-bottom: 0.2em;
+        }
+
+        .massive-text {
+            font-size: 6em;
+            letter-spacing: -0.04em;
+        }
+
+        .subtitle {
+            font-size: 2.5em;
+            color: var(--text-muted);
+            font-weight: 400;
+        }
+
+        .flex-center {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            text-align: center;
+        }
+
+        /* --- SPECIFIC LAYOUTS --- */
+        /* Section Divider */
+        .accent-line {
+            width: 100px;
+            height: 6px;
+            background: var(--gradient);
+            border-radius: 3px;
+            margin: 0 auto 2em auto;
+        }
+
+        .section-title {
+            font-size: 2em;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            color: var(--accent);
+            margin-bottom: 0.5em;
+        }
+
+        /* Two Column */
+        .two-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4em;
+            flex-grow: 1;
+        }
+
+        .two-col h3 {
+            font-size: 2em;
+            color: var(--accent);
+            margin-bottom: 1em;
+        }
+
+        /* KPI Grid */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2em;
+            flex-grow: 1;
+            align-items: center;
+        }
+
+        .kpi-card {
+            background: var(--bg);
+            padding: 3em 2em;
+            border-radius: 16px;
+            text-align: center;
+            border: 1px solid var(--grid-lines);
+            transition: transform 0.3s;
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 10px 30px var(--accent-glow);
+            border-color: var(--accent);
+        }
+
+        .kpi-val {
+            font-size: 4em;
+            font-weight: 800;
+            margin-bottom: 0.2em;
+        }
+
+        .kpi-label {
+            font-size: 1.4em;
+            color: var(--text-muted);
+        }
+
+        /* V-Grid (Crash Course) */
+        .v-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5em;
+            margin-top: 1em;
+        }
+
+        .v-card {
+            background: var(--bg);
+            border: 1px solid var(--grid-lines);
+            border-radius: 12px;
+            padding: 1.5em;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .v-card strong {
+            font-size: 1.8em;
+            color: var(--accent);
+            margin-bottom: 0.2em;
+        }
+
+        /* Timeline */
+        .timeline-container {
+            display: flex;
+            justify-content: space-between;
+            position: relative;
+            margin-top: 4em;
+        }
+
+        .timeline-line {
+            position: absolute;
+            top: 24px;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--grid-lines);
+            z-index: 0;
+        }
+
+        .timeline-step {
+            position: relative;
+            z-index: 1;
+            flex: 1;
+            padding: 0 1em;
+            text-align: center;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.5s ease;
+        }
+
+        .slide.active .timeline-step {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .step-dot {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: var(--surface);
+            border: 4px solid var(--accent);
+            margin: 0 auto 1.5em auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 20px var(--accent-glow);
+        }
+
+        .step-dot::after {
+            content: '';
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--accent);
+        }
+
+        /* --- SVG STYLES --- */
+        .svg-container {
+            flex-grow: 1;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg);
+            border-radius: 16px;
+            border: 1px solid var(--grid-lines);
+            overflow: hidden;
+            position: relative;
+        }
+
+        svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .svg-text {
+            fill: var(--text);
+            font-family: inherit;
+        }
+
+        .svg-text-muted {
+            fill: var(--text-muted);
+            font-family: inherit;
+        }
+
+        .svg-stroke {
+            stroke: var(--text);
+        }
+
+        .svg-accent {
+            stroke: var(--accent);
+        }
+
+        /* --- NAVIGATION & CONTROLS --- */
+        #controls {
+            position: fixed;
+            bottom: 2em;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            gap: 2em;
+            background: var(--nav-bg);
+            padding: 0.8em 2em;
+            border-radius: 50px;
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--grid-lines);
+            z-index: 100;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        #slide-counter {
+            font-size: 1.2rem;
+            font-weight: 600;
+            font-variant-numeric: tabular-nums;
+            color: var(--text);
+            min-width: 60px;
+            text-align: center;
+        }
+
+        .nav-buttons,
+        .toggles {
+            display: flex;
+            gap: 0.5em;
+        }
+
+        .icon-btn {
+            background: transparent;
+            border: none;
+            color: var(--text);
+            cursor: pointer;
+            padding: 0.5em;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .icon-btn:hover {
+            background: var(--surface);
+            color: var(--accent);
+            transform: scale(1.1);
+        }
+
+        .icon-btn svg {
+            width: 24px;
+            height: 24px;
+            stroke: currentColor;
+            stroke-width: 2;
+            fill: none;
+        }
+
+        #progress-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: var(--grid-lines);
+            z-index: 100;
+        }
+
+        #progress-bar {
+            height: 100%;
+            background: var(--gradient);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        /* --- OVERVIEW MODE --- */
+        body.overview-mode {
+            overflow: auto;
+            background-color: var(--bg);
+        }
+
+        body.overview-mode #deck-container {
+            position: relative;
+            top: auto;
+            left: auto;
+            margin: 0;
+            transform: none !important;
+            width: 100%;
+            min-height: 100vh;
+            padding: 4em;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+            gap: 3em;
+            align-content: start;
+        }
+
+        body.overview-mode .slide {
+            position: relative;
+            opacity: 1;
+            visibility: visible;
+            transform: none !important;
+            font-size: 4.5px;
+            /* Scales down exactly via em units */
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+            aspect-ratio: 16/9;
+        }
+
+        body.overview-mode .slide:hover {
+            transform: translateY(-8px) !important;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            border-color: var(--accent);
+        }
+
+        body.overview-mode #controls {
+            bottom: 2em;
+            position: fixed;
+        }
+
+        /* --- PRESENTER NOTES --- */
+        #notes-panel {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 30vh;
+            background: var(--surface);
+            color: var(--text);
+            border-top: 1px solid var(--grid-lines);
+            padding: 2em 4em;
+            font-size: 1.5rem;
+            line-height: 1.6;
+            z-index: 90;
+            transform: translateY(100%);
+            transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+            overflow-y: auto;
+            box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        body.notes-mode #notes-panel {
+            transform: translateY(0);
+        }
+
+        body.notes-mode #deck-container {
+            transform-origin: top center;
+            margin-top: -450px;
+            top: 40%;
+        }
+
+        .notes-header {
+            font-size: 0.8em;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 1em;
+            font-weight: 700;
+        }
+
+        /* Animations for content inside slides */
+        .slide.active .stagger-list li {
+            animation: fadeUp 0.5s ease forwards;
+            opacity: 0;
+        }
+
+        .slide.active .stagger-list li:nth-child(1) {
+            animation-delay: 0.2s;
+        }
+
+        .slide.active .stagger-list li:nth-child(2) {
+            animation-delay: 0.4s;
+        }
+
+        .slide.active .stagger-list li:nth-child(3) {
+            animation-delay: 0.6s;
+        }
+
+        .slide.active .stagger-list li:nth-child(4) {
+            animation-delay: 0.8s;
+        }
+
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Progress Indicator -->
+    <div id="progress-container">
+        <div id="progress-bar"></div>
+    </div>
+
+    <!-- Presentation Canvas -->
+    <div id="deck-container">
+        <!-- Slides dynamically injected here -->
+    </div>
+
+    <!-- Presenter Notes -->
+    <div id="notes-panel">
+        <div class="notes-header">Presenter Notes</div>
+        <div id="notes-content"></div>
+    </div>
+
+    <!-- Navigation & Controls -->
+    <div id="controls">
+        <span id="slide-counter">1 / 0</span>
+
+        <div class="nav-buttons">
+            <button class="icon-btn" id="prev-btn" title="Previous Slide (Left Arrow / Shift+Space)">
+                <svg viewBox="0 0 24 24">
+                    <polyline points="15 18 9 12 15 6"></polyline>
+                </svg>
+            </button>
+            <button class="icon-btn" id="next-btn" title="Next Slide (Right Arrow / Space)">
+                <svg viewBox="0 0 24 24">
+                    <polyline points="9 18 15 12 9 6"></polyline>
+                </svg>
+            </button>
+        </div>
+
+        <div style="width: 1px; height: 24px; background: var(--grid-lines); margin: 0 0.5em;"></div>
+
+        <div class="toggles">
+            <button class="icon-btn" id="overview-btn" title="Overview Mode (Press 'O')">
+                <svg viewBox="0 0 24 24">
+                    <rect x="3" y="3" width="7" height="7"></rect>
+                    <rect x="14" y="3" width="7" height="7"></rect>
+                    <rect x="14" y="14" width="7" height="7"></rect>
+                    <rect x="3" y="14" width="7" height="7"></rect>
+                </svg>
+            </button>
+            <button class="icon-btn" id="notes-btn" title="Toggle Notes (Press 'N')">
+                <svg viewBox="0 0 24 24">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                    <polyline points="10 9 9 9 8 9"></polyline>
+                </svg>
+            </button>
+            <button class="icon-btn" id="theme-btn" title="Toggle Theme (Press 'T')">
+                <svg viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="5"></circle>
+                    <line x1="12" y1="1" x2="12" y2="3"></line>
+                    <line x1="12" y1="21" x2="12" y2="23"></line>
+                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                    <line x1="1" y1="12" x2="3" y2="12"></line>
+                    <line x1="21" y1="12" x2="23" y2="12"></line>
+                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        /* =========================================
+           DECK.JS (Consolidated)
+           ========================================= */
+
+        // --- 1. SLIDE DATA & CONTENT DEFINITION ---
+        const slidesData = [
+            // Title Slide
+            {
+                type: 'title',
+                title: 'HOMEPEDIA',
+                subtitle: 'Exploring Housing Insights',
+                notes: 'Welcome everyone. Today we are presenting Homepedia, an ambitious Big Data project aimed at revolutionizing how we understand the French housing market.'
+            },
+            // Section 1
+            {
+                type: 'section',
+                title: 'Section 1',
+                subtitle: 'Project Overview & Kickoff',
+                notes: 'Let\'s start with a high-level overview of what Homepedia is, who it is for, and our core deliverables.'
+            },
+            {
+                type: 'standard',
+                title: 'What is Homepedia?',
+                content: `
+                    <ul class="stagger-list">
+                        <li><strong>The Concept:</strong> A comprehensive Big Data platform for housing market information and analysis in France.</li>
+                        <li><strong>Target Audience:</strong> Individuals (buyers, sellers) and Professionals (agencies, investors, urban planners).</li>
+                        <li><strong>The Mission:</strong> Demystify real estate by transforming raw, disjointed data into accessible, actionable insights.</li>
+                    </ul>
+                `,
+                notes: 'Homepedia is not just a listing site; it is an analytical tool. We serve both everyday users looking for homes and professionals needing macro trends.'
+            },
+            {
+                type: 'kpi',
+                title: 'What Users Can Explore',
+                kpis: [
+                    { value: 'Prices', label: 'Historical trends & current market valuation' },
+                    { value: 'Regions', label: 'Geographic variations across France' },
+                    { value: 'Context', label: 'Socio-economic & environmental indicators' }
+                ],
+                notes: 'Our platform focuses on three pillars: Price tracking, geographic differences, and contextual metadata that influences housing decisions.'
+            },
+            {
+                type: 'two-column',
+                title: 'Multi-Dimensional Data Scope',
+                col1: `
+                    <h3>Multi-Level Geography</h3>
+                    <ul>
+                        <li><strong>National:</strong> Macro-economic trends across France</li>
+                        <li><strong>Regional:</strong> Inter-regional disparities</li>
+                        <li><strong>Departmental:</strong> Granular administrative views</li>
+                        <li><strong>City-Level:</strong> Hyper-local neighborhood insights</li>
+                    </ul>
+                `,
+                col2: `
+                    <h3>Contextual Indicators</h3>
+                    <ul>
+                        <li>Economy & Employment rates</li>
+                        <li>Education & School proximity</li>
+                        <li>Energy & Environment (DPE ratings)</li>
+                        <li>Infrastructure & Transport links</li>
+                        <li>Population Demographics</li>
+                    </ul>
+                `,
+                notes: 'To provide true context, we must join real estate transaction data with geographic and socio-economic datasets.'
+            },
+            {
+                type: 'timeline',
+                title: 'Mandatory Project Steps',
+                steps: [
+                    { title: 'Data Gathering', desc: 'Sourcing Open Data (DVF, INSEE)' },
+                    { title: 'DB Organization', desc: 'Relational + NoSQL & Indexing' },
+                    { title: 'Big Data Processing', desc: 'Hadoop/Spark on distributed clusters' },
+                    { title: 'Data Visualization', desc: 'Interactive dashboards & mapping' }
+                ],
+                notes: 'This is a full data pipeline project. From ingestion and storage to distributed computing and finally, user-facing visualization.'
+            },
+            {
+                type: 'pipeline',
+                title: 'Target Architecture Pipeline',
+                notes: 'Here is an abstraction of our architecture: raw data flows into structured storage, gets processed in the cloud (e.g., Databricks), and is served to our frontend app.'
+            },
+            {
+                type: 'standard',
+                title: 'Deliverables & Inspiration',
+                content: `
+                    <div class="two-col" style="gap: 2em;">
+                        <div>
+                            <h3>Project Deliverables</h3>
+                            <ul class="stagger-list">
+                                <li><strong>Interactive App:</strong> Tabular, cartographic, and textual views.</li>
+                                <li><strong>Backend Integration:</strong> Connect app to database and compute clusters.</li>
+                                <li><strong>Documentation:</strong> Schemas, cleaning methodology, and AI modeling approach.</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h3>Tools & Inspiration</h3>
+                            <ul>
+                                <li><strong>Suggested Tools:</strong> Mapbox/Leaflet (Maps), Streamlit (Prototyping)</li>
+                                <li><strong>Inspiration (Do not copy):</strong> Zillow, MeilleursAgents, PetitLoprin</li>
+                                <li><strong>Dataviz Refs:</strong> Data Viz Catalogue, From Data to Viz</li>
+                            </ul>
+                        </div>
+                    </div>
+                `,
+                notes: 'The end goal is a fully functional prototype with solid documentation. We will draw UX inspiration from market leaders but build our own unique analytics engine.'
+            },
+            // Section 2
+            {
+                type: 'section',
+                title: 'Section 2',
+                subtitle: 'Big Data Crash Course',
+                notes: 'Since this is a Big Data project, let\'s briefly align on what makes our data "Big" and how we handle it.'
+            },
+            {
+                type: 'standard',
+                title: 'The "Vs" of Big Data',
+                content: `
+                    <p>Big data is traditionally defined by the 3Vs, but modern systems must account for more:</p>
+                    <div class="v-grid">
+                        <div class="v-card"><strong>Volume</strong>Massive scale of datasets</div>
+                        <div class="v-card"><strong>Velocity</strong>Speed of data generation</div>
+                        <div class="v-card"><strong>Variety</strong>Different data structures</div>
+                        <div class="v-card"><strong>Variability</strong>Inconsistent data flows</div>
+                        <div class="v-card"><strong>Veracity</strong>Accuracy and trustworthiness</div>
+                        <div class="v-card"><strong>Value & Viz</strong>Extracting & displaying meaning</div>
+                    </div>
+                `,
+                notes: 'Volume, Velocity, and Variety are the core. But Veracity (trusting the data) and Value (the actual insights) are what make the project successful.'
+            },
+            {
+                type: 'two-column',
+                title: 'Why Homepedia is "Big Data"',
+                col1: `
+                    <h3>The Project's Vs</h3>
+                    <ul>
+                        <li><strong>Volume:</strong> Millions of transaction records (DVF) spanning decades.</li>
+                        <li><strong>Variety:</strong> Structured (tables), Geo-spatial (polygons/points), and Unstructured (text).</li>
+                        <li><strong>Volatility:</strong> Rapid shifts in market dynamics requiring constant recalculation.</li>
+                    </ul>
+                `,
+                col2: `
+                    <h3>Storage Strategy</h3>
+                    <ul>
+                        <li><strong>Relational (SQL):</strong> Best for structured schemas, user accounts, and transactional integrity.</li>
+                        <li><strong>Non-Relational (NoSQL/Document):</strong> Best for flexible, sparse indicator data and fast read-heavy queries.</li>
+                    </ul>
+                `,
+                notes: 'We use a hybrid storage approach. SQL for strict schemas, NoSQL for flexible attributes like changing neighborhood amenities.'
+            },
+            {
+                type: 'standard',
+                title: 'Processing & Visualization Principles',
+                content: `
+                    <ul class="stagger-list">
+                        <li><strong>Distributed Compute:</strong> We use parallel processing (Hadoop/Spark, potentially Databricks) to aggregate national trends in seconds.</li>
+                        <li><strong>Avoid Chartjunk:</strong> Keep visualizations clean. High data-ink ratio.</li>
+                        <li><strong>Interactive Filtering:</strong> Users must be able to drill down from national heatmaps to street-level data seamlessly.</li>
+                    </ul>
+                `,
+                notes: 'Processing at scale requires distributed computing. When presenting this data, clarity is key—no cluttered charts, just clear, interactive maps and graphs.'
+            },
+            {
+                type: 'map',
+                title: 'Visualizing Regional Disparities (Mock)',
+                notes: 'This mock represents how we might use a choropleth map to show price densities or contextual indicators across different regions.'
+            },
+            // Section 3
+            {
+                type: 'section',
+                title: 'Section 3',
+                subtitle: 'Proposed Additional Challenges',
+                notes: 'Finally, let\'s look at stretch goals to take Homepedia from a standard project to an enterprise-grade platform.'
+            },
+            {
+                type: 'two-column',
+                title: 'Stretch Goals: Engineering',
+                col1: `
+                    <h3>Expansion & Infrastructure</h3>
+                    <ul>
+                        <li><strong>Multi-Country:</strong> Expand pipelines to ingest European data (e.g., UK Land Registry).</li>
+                        <li><strong>CI/CD Pipelines:</strong> Automated testing and zero-downtime deployment.</li>
+                        <li><strong>Real-time Streaming:</strong> Transition from batch processing to streaming ingestion (Kafka).</li>
+                    </ul>
+                `,
+                col2: `
+                    <h3>Security & Management</h3>
+                    <ul>
+                        <li><strong>Authentication:</strong> Secure accounts with JWT/OAuth.</li>
+                        <li><strong>Roles & Access:</strong> Differentiate standard users from Admin/Pro users.</li>
+                        <li><strong>Admin Backoffice:</strong> Dashboard to monitor data ingestion health.</li>
+                    </ul>
+                `,
+                notes: 'On the engineering side, scaling to other countries and implementing proper DevOps and Security will elevate the project.'
+            },
+            {
+                type: 'standard',
+                title: 'Stretch Goals: Data Science & UX',
+                content: `
+                    <div class="two-col">
+                        <div>
+                            <h3>Advanced AI & NLP</h3>
+                            <ul class="stagger-list">
+                                <li><strong>NLP Sentiment Analysis:</strong> Analyze textual reviews of neighborhoods to generate a "vibe" score.</li>
+                                <li><strong>Model-Assisted Forecasting:</strong> Predict future price trends using Time-Series modeling.</li>
+                                <li><strong>Clustering:</strong> Algorithmically group similar cities to suggest alternatives to buyers.</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h3>Performance & Onboarding</h3>
+                            <ul class="stagger-list">
+                                <li><strong>Caching Strategy:</strong> Pre-aggregate heavy queries and cache map vector tiles for instant loads.</li>
+                                <li><strong>Guided UX Tour:</strong> Implement an interactive onboarding flow for new users.</li>
+                            </ul>
+                        </div>
+                    </div>
+                `,
+                notes: 'For Data Science, NLP on neighborhood reviews and predictive price modeling add immense value. For UX, intelligent caching ensures the app feels lightning fast.'
+            }
+        ];
+
+        // --- 2. STATE & DOM ELEMENTS ---
+        let currentSlide = 0;
+        let isOverviewMode = false;
+        let isNotesMode = false;
+
+        const deckContainer = document.getElementById('deck-container');
+        const progressBar = document.getElementById('progress-bar');
+        const counterEl = document.getElementById('slide-counter');
+        const notesContent = document.getElementById('notes-content');
+
+        // --- 3. RENDERING LOGIC ---
+        function createSlideHTML(slide, index) {
+            let innerHTML = '';
+
+            switch (slide.type) {
+                case 'title':
+                    innerHTML = `
+                        <div class="flex-center">
+                            <h1 class="gradient-text massive-text">${slide.title}</h1>
+                            <h2 class="subtitle">${slide.subtitle}</h2>
+                        </div>`;
+                    break;
+                case 'section':
+                    innerHTML = `
+                        <div class="flex-center section-slide">
+                            <div class="accent-line"></div>
+                            <h2 class="section-title">${slide.title}</h2>
+                            <h1 class="massive-text">${slide.subtitle}</h1>
+                        </div>`;
+                    break;
+                case 'kpi':
+                    innerHTML = `
+                        <h1 class="slide-header">${slide.title}</h1>
+                        <div class="kpi-grid">
+                            ${slide.kpis.map((kpi, i) => `
+                                <div class="kpi-card" style="animation-delay: ${i * 0.15}s">
+                                    <div class="kpi-val gradient-text">${kpi.value}</div>
+                                    <div class="kpi-label">${kpi.label}</div>
+                                </div>
+                            `).join('')}
+                        </div>`;
+                    break;
+                case 'two-column':
+                    innerHTML = `
+                        <h1 class="slide-header">${slide.title}</h1>
+                        <div class="two-col">
+                            <div class="col">${slide.col1}</div>
+                            <div class="col">${slide.col2}</div>
+                        </div>`;
+                    break;
+                case 'timeline':
+                    innerHTML = `
+                        <h1 class="slide-header">${slide.title}</h1>
+                        <div class="timeline-container">
+                            <div class="timeline-line"></div>
+                            ${slide.steps.map((step, i) => `
+                                <div class="timeline-step" style="transition-delay: ${i * 0.15}s">
+                                    <div class="step-dot"></div>
+                                    <h3>${step.title}</h3>
+                                    <p style="font-size:1.1em">${step.desc}</p>
+                                </div>
+                            `).join('')}
+                        </div>`;
+                    break;
+                case 'pipeline':
+                    // SVG Pipeline diagram generator
+                    innerHTML = `
+                        <h1 class="slide-header">${slide.title}</h1>
+                        <div class="svg-container">
+                            <svg viewBox="0 0 1000 300">
+                                <defs>
+                                    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                                        <path d="M 0 0 L 10 5 L 0 10 z" class="svg-accent" fill="currentColor"/>
+                                    </marker>
+                                </defs>
+                                
+                                <!-- DB Node -->
+                                <g transform="translate(100, 100)">
+                                    <path d="M0,0 C0,-15 60,-15 60,0 L60,80 C60,95 0,95 0,80 Z" class="svg-stroke" fill="transparent" stroke-width="4"/>
+                                    <ellipse cx="30" cy="0" rx="30" ry="10" class="svg-stroke" fill="transparent" stroke-width="4"/>
+                                    <text x="30" y="130" class="svg-text" text-anchor="middle" font-size="24" font-weight="bold">Raw DBs</text>
+                                </g>
+
+                                <path d="M 180 140 L 320 140" class="svg-accent" stroke-width="6" marker-end="url(#arrow)"/>
+
+                                <!-- Processing Node -->
+                                <g transform="translate(350, 90)">
+                                    <rect x="0" y="0" width="100" height="100" rx="16" class="svg-stroke" fill="transparent" stroke-width="4" stroke-dasharray="8 4"/>
+                                    <circle cx="50" cy="50" r="20" class="svg-accent" fill="transparent" stroke-width="4"/>
+                                    <path d="M 50 20 L 50 80 M 20 50 L 80 50" class="svg-accent" stroke-width="4"/>
+                                    <text x="50" y="140" class="svg-text" text-anchor="middle" font-size="24" font-weight="bold">Spark Cluster</text>
+                                </g>
+
+                                <path d="M 470 140 L 610 140" class="svg-accent" stroke-width="6" marker-end="url(#arrow)"/>
+
+                                <!-- Cloud Node -->
+                                <g transform="translate(640, 90)">
+                                    <path d="M 20 60 Q 20 20 60 20 Q 90 0 120 30 Q 160 30 160 60 Z" class="svg-stroke" fill="transparent" stroke-width="4"/>
+                                    <text x="90" y="140" class="svg-text" text-anchor="middle" font-size="24" font-weight="bold">Databricks API</text>
+                                </g>
+
+                                <path d="M 800 140 L 860 140" class="svg-accent" stroke-width="6" marker-end="url(#arrow)"/>
+
+                                <!-- App Node -->
+                                <g transform="translate(880, 100)">
+                                    <rect x="0" y="0" width="80" height="80" rx="8" class="svg-stroke" fill="transparent" stroke-width="4"/>
+                                    <rect x="10" y="40" width="15" height="30" class="svg-accent" fill="currentColor"/>
+                                    <rect x="32" y="20" width="15" height="50" class="svg-accent" fill="currentColor"/>
+                                    <rect x="55" y="50" width="15" height="20" class="svg-accent" fill="currentColor"/>
+                                    <text x="40" y="130" class="svg-text" text-anchor="middle" font-size="24" font-weight="bold">Frontend</text>
+                                </g>
+                            </svg>
+                        </div>`;
+                    break;
+                case 'map':
+                    // Map Mockup SVG
+                    innerHTML = `
+                        <h1 class="slide-header">${slide.title}</h1>
+                        <div class="svg-container" style="background: transparent;">
+                            <svg viewBox="0 0 800 400" preserveAspectRatio="xMidYMid meet">
+                                <defs>
+                                    <radialGradient id="heat1" cx="50%" cy="50%" r="50%">
+                                        <stop offset="0%" stop-color="#ef4444" stop-opacity="0.6"/>
+                                        <stop offset="100%" stop-color="#ef4444" stop-opacity="0"/>
+                                    </radialGradient>
+                                    <radialGradient id="heat2" cx="50%" cy="50%" r="50%">
+                                        <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.6"/>
+                                        <stop offset="100%" stop-color="#3b82f6" stop-opacity="0"/>
+                                    </radialGradient>
+                                    <filter id="glow">
+                                        <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+                                        <feMerge>
+                                            <feMergeNode in="coloredBlur"/>
+                                            <feMergeNode in="SourceGraphic"/>
+                                        </feMerge>
+                                    </filter>
+                                </defs>
+                                
+                                <!-- Stylized Map of France (L'Hexagone) -->
+                                <g transform="translate(260, 20) scale(1.1)" filter="drop-shadow(0 10px 15px rgba(0,0,0,0.3))">
+                                    <!-- France Outline -->
+                                    <path d="M 150,20 L 220,50 L 280,120 L 250,220 L 290,280 L 220,330 L 150,330 L 80,280 L 100,200 L 40,150 L 60,80 Z" 
+                                          fill="var(--surface)" stroke="var(--accent)" stroke-width="3" stroke-linejoin="round"/>
+                                    
+                                    <!-- Internal faux regions -->
+                                    <path d="M 150,20 L 160,120 L 280,120 M 160,120 L 120,220 L 40,150 M 120,220 L 250,220 M 160,120 L 200,200 L 250,220 M 200,200 L 180,330" 
+                                          stroke="var(--grid-lines)" stroke-width="2" fill="none" />
+                                </g>
+
+                                <!-- Data Points / Heatmap -->
+                                <g transform="translate(260, 20) scale(1.1)">
+                                    <!-- Paris Area -->
+                                    <circle cx="160" cy="90" r="45" fill="url(#heat1)" />
+                                    <circle cx="160" cy="90" r="6" fill="#ef4444" filter="url(#glow)"/>
+                                    <text x="175" y="85" class="svg-text" font-size="14" font-weight="bold">Paris & Île-de-France</text>
+                                    <text x="175" y="105" fill="#ef4444" font-size="14" font-weight="bold">+ 5.2%</text>
+                                    
+                                    <!-- Lyon Area -->
+                                    <circle cx="210" cy="200" r="35" fill="url(#heat2)" />
+                                    <circle cx="210" cy="200" r="6" fill="#3b82f6" filter="url(#glow)"/>
+                                    <text x="225" y="195" class="svg-text" font-size="14" font-weight="bold">Lyon Metro</text>
+                                    <text x="225" y="215" fill="#3b82f6" font-size="14" font-weight="bold">- 1.1%</text>
+
+                                    <!-- Marseille Area -->
+                                    <circle cx="230" cy="290" r="40" fill="url(#heat1)" />
+                                    <circle cx="230" cy="290" r="6" fill="#ef4444" filter="url(#glow)"/>
+                                    <text x="245" y="285" class="svg-text" font-size="14" font-weight="bold">Marseille / PACA</text>
+                                    <text x="245" y="305" fill="#ef4444" font-size="14" font-weight="bold">+ 3.8%</text>
+                                    
+                                    <!-- Bordeaux Area -->
+                                    <circle cx="90" cy="230" r="30" fill="url(#heat2)" />
+                                    <circle cx="90" cy="230" r="6" fill="#3b82f6" filter="url(#glow)"/>
+                                    <text x="15" y="225" class="svg-text" font-size="14" font-weight="bold">Bordeaux</text>
+                                    <text x="35" y="245" fill="#3b82f6" font-size="14" font-weight="bold">- 2.4%</text>
+                                </g>
+                                
+                                <!-- Legend -->
+                                <g transform="translate(50, 250)">
+                                    <rect x="0" y="0" width="190" height="100" rx="8" fill="var(--surface)" stroke="var(--grid-lines)"/>
+                                    <text x="20" y="30" class="svg-text" font-size="16" font-weight="bold">Price Variation (YOY)</text>
+                                    <circle cx="30" cy="55" r="8" fill="#ef4444" />
+                                    <text x="50" y="60" class="svg-text" font-size="14">Increase Trend</text>
+                                    <circle cx="30" cy="80" r="8" fill="#3b82f6" />
+                                    <text x="50" y="85" class="svg-text" font-size="14">Decrease Trend</text>
+                                </g>
+                            </svg>
+                        </div>`;
+                    break;
+                case 'standard':
+                default:
+                    innerHTML = `
+                        <h1 class="slide-header">${slide.title}</h1>
+                        <div style="flex-grow: 1; display:flex; flex-direction:column; justify-content:center;">${slide.content}</div>
+                    `;
+                    break;
+            }
+
+            return `
+                <div class="slide" id="slide-${index}" onclick="if(isOverviewMode) jumpToSlide(${index})">
+                    ${innerHTML}
+                </div>
+            `;
+        }
+
+        function initDeck() {
+            // Generate HTML
+            deckContainer.innerHTML = slidesData.map((s, i) => createSlideHTML(s, i)).join('');
+
+            // Initial positioning
+            updateSlides();
+            resizeDeck();
+
+            // Events
+            window.addEventListener('resize', resizeDeck);
+            document.addEventListener('keydown', handleKeydown);
+
+            document.getElementById('prev-btn').addEventListener('click', prevSlide);
+            document.getElementById('next-btn').addEventListener('click', nextSlide);
+            document.getElementById('overview-btn').addEventListener('click', toggleOverview);
+            document.getElementById('notes-btn').addEventListener('click', toggleNotes);
+            document.getElementById('theme-btn').addEventListener('click', toggleTheme);
+        }
+
+        // --- 4. NAVIGATION & UPDATES ---
+        function updateSlides() {
+            const slideEls = document.querySelectorAll('.slide');
+
+            slideEls.forEach((el, index) => {
+                el.classList.remove('active', 'prev', 'next');
+                if (index === currentSlide) {
+                    el.classList.add('active');
+                } else if (index < currentSlide) {
+                    el.classList.add('prev');
+                } else {
+                    el.classList.add('next');
+                }
+            });
+
+            // Update UI elements
+            counterEl.textContent = `${currentSlide + 1} / ${slidesData.length}`;
+            progressBar.style.width = `${((currentSlide + 1) / slidesData.length) * 100}%`;
+
+            // Update Notes
+            const currentNotes = slidesData[currentSlide].notes;
+            notesContent.innerHTML = currentNotes ? currentNotes : '<em>No presenter notes available for this slide.</em>';
+        }
+
+        function nextSlide() {
+            if (isOverviewMode) return;
+            if (currentSlide < slidesData.length - 1) {
+                currentSlide++;
+                updateSlides();
+            }
+        }
+
+        function prevSlide() {
+            if (isOverviewMode) return;
+            if (currentSlide > 0) {
+                currentSlide--;
+                updateSlides();
+            }
+        }
+
+        function jumpToSlide(index) {
+            currentSlide = index;
+            if (isOverviewMode) toggleOverview();
+            updateSlides();
+        }
+
+        // --- 5. INTERACTION HANDLERS ---
+        function handleKeydown(e) {
+            // Ignore if active element is an input
+            if (document.activeElement.tagName === "INPUT" || document.activeElement.tagName === "TEXTAREA") return;
+
+            switch (e.key) {
+                case 'ArrowRight':
+                    e.preventDefault();
+                    nextSlide();
+                    break;
+                case 'ArrowLeft':
+                    e.preventDefault();
+                    prevSlide();
+                    break;
+                case ' ':
+                    e.preventDefault();
+                    if (e.shiftKey) prevSlide(); else nextSlide();
+                    break;
+                case 'o':
+                case 'O':
+                    e.preventDefault();
+                    toggleOverview();
+                    break;
+                case 'n':
+                case 'N':
+                    e.preventDefault();
+                    toggleNotes();
+                    break;
+                case 't':
+                case 'T':
+                    e.preventDefault();
+                    toggleTheme();
+                    break;
+            }
+        }
+
+        function toggleOverview() {
+            isOverviewMode = !isOverviewMode;
+            document.body.classList.toggle('overview-mode', isOverviewMode);
+
+            if (isOverviewMode) {
+                // Ensure correct scrolling in overview
+                setTimeout(() => {
+                    const activeSlide = document.getElementById(`slide-${currentSlide}`);
+                    if (activeSlide) activeSlide.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }, 50);
+            } else {
+                resizeDeck(); // Re-apply perfect scaling
+            }
+        }
+
+        function toggleNotes() {
+            isNotesMode = !isNotesMode;
+            document.body.classList.toggle('notes-mode', isNotesMode);
+        }
+
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            html.setAttribute('data-theme', currentTheme === 'dark' ? 'light' : 'dark');
+        }
+
+        // --- 6. RESPONSIVE SCALING (16:9 constraints) ---
+        function resizeDeck() {
+            if (isOverviewMode) return;
+
+            const windowW = window.innerWidth;
+            const windowH = window.innerHeight;
+
+            // Account for notes panel if open
+            const availableH = isNotesMode ? windowH * 0.7 : windowH;
+
+            const deckW = 1600;
+            const deckH = 900;
+
+            // Calculate scale to fit within viewport with 2% margin
+            const scale = Math.min((windowW * 0.96) / deckW, (availableH * 0.96) / deckH);
+
+            deckContainer.style.transform = `scale(${scale})`;
+        }
+
+        // Initialize on load
+        window.addEventListener('DOMContentLoaded', initDeck);
+
+    </script>
+</body>
+
+</html>
